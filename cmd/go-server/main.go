@@ -21,7 +21,7 @@ func main() {
 	cfg := config.MustLoad()
 
 	//db setup
-	_, dbErr := sqlite.New(cfg)
+	storage, dbErr := sqlite.New(cfg)
 
 	if dbErr != nil {
 		log.Fatal(dbErr)
@@ -32,7 +32,7 @@ func main() {
 	//http.NewServeMux() is like express.Router()
 	//HandleFunc("GET /", handler) is like app.get('/', handler)
 	router := http.NewServeMux()
-	router.HandleFunc("POST /api/students", student.New())
+	router.HandleFunc("POST /api/students", student.New(storage))
 	router.HandleFunc("GET /api/ready", student.Ready())
 	//setup server -> This is similar to: app.listen(8082, () => console.log('Server started'));
 	server := http.Server{
