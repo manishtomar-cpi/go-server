@@ -1,10 +1,8 @@
 pipeline {
   agent any
 
-  environment {
-    // Make Homebrew Go visible to Jenkins on macOS
-    PATH = "/opt/homebrew/bin:${env.PATH}"
-    GOMODCACHE = "${env.WORKSPACE}/.gomodcache"
+  tools {
+    go 'Go1.22'   // must match the name you set in Manage Jenkins → Tools
   }
 
   options { timestamps() }
@@ -37,6 +35,6 @@ pipeline {
 
   post {
     success { echo 'Tests passed' }
-    failure { echo ' Tests failed — see Console Output' }
+    failure { echo 'Tests failed — see Console Output' }
   }
 }
