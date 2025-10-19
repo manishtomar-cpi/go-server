@@ -2,47 +2,41 @@ pipeline {
   agent any
 
   environment {
-    // Homebrew path for Apple Silicon; adjust if needed
+    // Make Homebrew Go visible to Jenkins on macOS
     PATH = "/opt/homebrew/bin:${env.PATH}"
     GOMODCACHE = "${env.WORKSPACE}/.gomodcache"
   }
 
-  options {
-    timestamps()
-  }
+  options { timestamps() }
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Setup') {
       steps {
-        sh 'which go || true'
-        sh 'go version || true'
-        sh 'go env'
+        sh 'go version'
         sh 'go mod download'
       }
     }
 
-    stage('Test') {
+    stage('Unit tests') {
       steps {
         sh 'go test ./... -v -race -coverprofile=coverage.out'
+      }
+      post {
+        always {
+          archiveArtifacts artifacts: 'coverage.out', fingerprint: true
+          sh 'go tool cover -html=coverage.out -o coverage.html || true'
+          archiveArtifacts artifacts: 'coverage.html', fingerprint: true
+        }
       }
     }
   }
 
   post {
-    always {
-      archiveArtifacts artifacts: 'coverage.out', fingerprint: true
-    }
-    success {
-      echo 'Tests passed!'
-    }
-    failure {
-      echo 'Tests failed — check the console output.'
-    }
+    success { echo 'Tests passed' }
+    failure { echo ' Tests failed — see Console Output' }
   }
 }
