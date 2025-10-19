@@ -8,8 +8,9 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+// struct tags -> They tell Go libraries how to read data into struct fields, So, when we load the YAML file, Go knows how to fill these values into your struct.
 type HTTPServer struct {
-	Address string
+	Address string `yaml:"address" env-requried:"true"`
 }
 
 type Config struct {
@@ -21,9 +22,11 @@ type Config struct {
 
 func MustLoad() *Config {
 	var configPath string
+	// If we run the app like: CONFIG_PATH=config/local.yaml go run cmd/go-server/main.go. CONFIG_PATH would be picked up here. Check if there’s an environment variable named CONFIG_PATH already set in the system.
 	configPath = os.Getenv("CONFIG_PATH")
 
-	if configPath == "" { // if config not passed in envs we check from flag mean the start command go run -"flags_here"
+	// If no environment variable, it checks if we gave a command-line flag, like: go run cmd/go-server/main.go --config config/local.yam
+	if configPath == "" {
 		flags := flag.String("config", "", "path to the cofig file")
 		flag.Parse()
 		configPath = *flags //because flags is the pointer
@@ -39,7 +42,7 @@ func MustLoad() *Config {
 	}
 
 	var cfg Config
-
+	// cleanenv is an external library that reads our YAML file and fills in the struct automatically — just like dotenv fills process.env in Node.
 	err := cleanenv.ReadConfig(configPath, &cfg)
 	if err != nil {
 		log.Fatalf("can not read config file: %s", err.Error())
